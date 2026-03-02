@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -17,10 +17,10 @@ async def is_stale(db: AsyncSession, item_type: str, item_id: str, source: str, 
     log = result.scalar_one_or_none()
     if not log:
         return True
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=ttl_hours)
+    cutoff = datetime.utcnow() - timedelta(hours=ttl_hours)
     last = log.last_fetched_at
     if last.tzinfo is None:
-        last = last.replace(tzinfo=timezone.utc)
+        last = last
     return last < cutoff
 
 
@@ -33,7 +33,7 @@ async def update_fetch_log(db: AsyncSession, item_type: str, item_id: str, sourc
         )
     )
     log = result.scalar_one_or_none()
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
     if log:
         log.last_fetched_at = now
         log.fetch_status = status

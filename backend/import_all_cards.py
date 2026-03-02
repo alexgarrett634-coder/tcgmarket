@@ -17,7 +17,7 @@ import asyncio
 import os
 import sys
 import argparse
-from datetime import datetime, timezone
+from datetime import datetime
 
 import httpx
 
@@ -25,7 +25,13 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+
+def _make_upsert(db_url: str):
+    if "postgresql" in db_url or "postgres" in db_url:
+        return pg_insert
+    return sqlite_insert
 
 from app.database import engine, create_tables
 from app.models.card import Card
@@ -110,7 +116,7 @@ async def import_language(client: httpx.AsyncClient, db: AsyncSession, lang: str
             skipped_tcgp += len(cards)
             continue
 
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()
 
         # Fetch rarities concurrently for all cards in this set
         raw_ids = [c.get("id", "") for c in cards if c.get("id") and c.get("name")]
@@ -135,7 +141,8 @@ async def import_language(client: httpx.AsyncClient, db: AsyncSession, lang: str
             card_id = raw_id if lang == "en" else f"{raw_id}-{lang}"
             rarity = rarity_map.get(raw_id)
 
-            stmt = sqlite_insert(Card).values(
+            _insert = _make_upsert(str(engine.url))
+            stmt = _insert(Card).values(
                 id=card_id,
                 name=name,
                 set_name=set_name,

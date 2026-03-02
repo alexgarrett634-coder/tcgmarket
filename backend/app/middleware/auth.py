@@ -3,7 +3,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import datetime, timezone
+from datetime import datetime
 
 from app.database import get_db
 from app.models.user import User
@@ -46,7 +46,7 @@ async def get_user_from_api_key(api_key: str, db: AsyncSession) -> User | None:
     record = result.scalar_one_or_none()
     if not record:
         return None
-    record.last_used_at = datetime.now(timezone.utc)
+    record.last_used_at = datetime.utcnow()
     user = await get_user_by_id(db, record.user_id)
     return user if user and user.is_active else None
 

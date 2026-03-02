@@ -129,14 +129,21 @@ function ListRow({ listing, onClick }: { listing: Listing; onClick: () => void }
   )
 }
 
-export default function Marketplace() {
+const GAME_CONFIG = {
+  pokemon: { language: 'en',  label: 'Pokémon',    desc: 'Buy Pokémon TCG cards from collectors' },
+  ygo:     { language: 'ygo', label: 'Yu-Gi-Oh!',  desc: 'Buy Yu-Gi-Oh! cards from collectors' },
+  op:      { language: 'op',  label: 'One Piece',   desc: 'Buy One Piece TCG cards from collectors' },
+}
+
+export default function Marketplace({ game }: { game?: 'pokemon' | 'ygo' | 'op' }) {
+  const gameConfig = game ? GAME_CONFIG[game] : null
   const navigate = useNavigate()
   const { isLoggedIn } = useAuth()
   const [search, setSearch] = useState('')
   const [condition, setCondition] = useState('')
   const [priceMax, setPriceMax] = useState('')
   const [itemType, setItemType] = useState('')
-  const [language, setLanguage] = useState('')
+  const [language, setLanguage] = useState(gameConfig?.language ?? '')
   const [setCode, setSetCode] = useState('')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sortBy, setSortBy] = useState<'price_asc' | 'price_desc' | 'newest'>('newest')
@@ -188,7 +195,7 @@ export default function Marketplace() {
 
   const resetFilters = () => {
     setSearch(''); setCondition(''); setPriceMax(''); setItemType('')
-    setLanguage(''); setSetCode(''); setAllListings([])
+    setLanguage(gameConfig?.language ?? ''); setSetCode(''); setAllListings([])
   }
 
   return (
@@ -196,9 +203,9 @@ export default function Marketplace() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Marketplace</h1>
+          <h1 className="text-2xl font-bold text-white">{gameConfig ? `${gameConfig.label} Marketplace` : 'Marketplace'}</h1>
           <p className="text-sm text-muted mt-0.5">
-            Buy Pokemon TCG cards in all languages from collectors
+            {gameConfig ? gameConfig.desc : 'Buy TCG cards from collectors'}
             {allListings.length > 0 && <span> · {allListings.length.toLocaleString()} listings loaded</span>}
           </p>
         </div>
@@ -245,10 +252,12 @@ export default function Marketplace() {
 
         {/* Row 2: language + set */}
         <div className="flex flex-wrap gap-3">
-          <select value={language} onChange={(e) => { setLanguage(e.target.value); setSetCode(''); setAllListings([]) }}
-            className="px-3 py-2 bg-surface border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-accent">
-            {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
-          </select>
+          {!gameConfig && (
+            <select value={language} onChange={(e) => { setLanguage(e.target.value); setSetCode(''); setAllListings([]) }}
+              className="px-3 py-2 bg-surface border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-accent">
+              {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
+            </select>
+          )}
           <select value={setCode} onChange={(e) => { setSetCode(e.target.value); setAllListings([]) }}
             className="flex-1 min-w-48 px-3 py-2 bg-surface border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-accent">
             <option value="">All Sets</option>

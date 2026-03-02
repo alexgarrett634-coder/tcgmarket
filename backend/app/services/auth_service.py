@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Any
 
 import bcrypt as _bcrypt
@@ -26,7 +26,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def create_token(data: dict[str, Any], expires_delta: timedelta) -> str:
     payload = data.copy()
-    payload["exp"] = datetime.now(timezone.utc) + expires_delta
+    payload["exp"] = datetime.utcnow() + expires_delta
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 

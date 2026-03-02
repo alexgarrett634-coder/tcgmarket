@@ -1,7 +1,7 @@
 """eBay deal scanning, scoring, SSE broadcasting, and internal deal generation."""
 import asyncio
 import json
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 from typing import AsyncIterator
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -97,7 +97,7 @@ async def scan_ebay_deals(db: AsyncSession) -> int:
             if score < 10.0:
                 continue
 
-            expires = datetime.now(timezone.utc) + timedelta(hours=48)
+            expires = datetime.utcnow() + timedelta(hours=48)
             # Upsert by (source, external_id)
             existing = await db.execute(
                 select(DealListing).where(
@@ -134,14 +134,14 @@ async def scan_ebay_deals(db: AsyncSession) -> int:
     # Mark expired deals
     await db.execute(
         select(DealListing).where(
-            DealListing.expires_at < datetime.now(timezone.utc),
+            DealListing.expires_at < datetime.utcnow(),
             DealListing.status == "active",
         )
     )
     # (bulk update via ORM loop is fine for SQLite scale)
     expired_res = await db.execute(
         select(DealListing).where(
-            DealListing.expires_at < datetime.now(timezone.utc),
+            DealListing.expires_at < datetime.utcnow(),
             DealListing.status == "active",
         )
     )
@@ -198,7 +198,7 @@ async def generate_internal_deals(db: AsyncSession) -> int:
     listings = result.scalars().all()
 
     new_deals = 0
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
     expires = now + timedelta(hours=48)
 
     for listing in listings:

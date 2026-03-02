@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi import HTTPException
@@ -62,7 +62,7 @@ async def place_position(
         if wallet.real_credits_usd < amount:
             raise HTTPException(400, "Insufficient Market Credits")
         wallet.real_credits_usd -= amount
-    wallet.updated_at = datetime.now(timezone.utc)
+    wallet.updated_at = datetime.utcnow()
 
     # FPMM calculation
     shares, new_pool_yes, new_pool_no = buy_shares(market.pool_yes, market.pool_no, side, amount)
@@ -113,7 +113,7 @@ async def resolve_market(db: AsyncSession, market: PredictionMarket) -> None:
         return
 
     market.resolved_price = final_price
-    market.resolved_at = datetime.now(timezone.utc)
+    market.resolved_at = datetime.utcnow()
 
     # Determine outcome based on market_type
     if market.market_type in ("price_above", "new_high"):
@@ -135,7 +135,7 @@ async def resolve_market(db: AsyncSession, market: PredictionMarket) -> None:
 
     for pos in positions:
         pos.settled = True
-        pos.settled_at = datetime.now(timezone.utc)
+        pos.settled_at = datetime.utcnow()
 
         if pos.side == outcome:
             # Winner: 1 coin/credit per share
@@ -150,7 +150,7 @@ async def resolve_market(db: AsyncSession, market: PredictionMarket) -> None:
                     wallet.prediction_coins += int(payout)
                 else:
                     wallet.real_credits_usd += payout
-                wallet.updated_at = datetime.now(timezone.utc)
+                wallet.updated_at = datetime.utcnow()
 
             db.add(WalletTransaction(
                 user_id=pos.user_id,

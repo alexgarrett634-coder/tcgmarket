@@ -1,6 +1,6 @@
 """Auto-generation of prediction markets based on price signals."""
 import statistics
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
@@ -25,7 +25,7 @@ async def get_most_watched_cards(db: AsyncSession, limit: int = 100) -> list[Car
 
 async def get_price_series(db: AsyncSession, card_id: str, days: int = 30) -> list[float]:
     """Return list of price_usd values (market, tcgplayer) oldest → newest."""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.utcnow() - timedelta(days=days)
     result = await db.execute(
         select(CardPrice.price_usd).where(
             CardPrice.card_id == card_id,
@@ -60,7 +60,7 @@ async def maybe_create_market(
     if await has_open_market(db, card.id, None):
         return None
 
-    target_date = datetime.now(timezone.utc) + timedelta(days=days)
+    target_date = datetime.utcnow() + timedelta(days=days)
     pool = float(settings.market_initial_pool)
 
     if market_type == "price_above":

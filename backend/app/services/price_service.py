@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_, and_
 
@@ -24,8 +24,8 @@ async def fetch_and_store_card_prices(db: AsyncSession, card: Card, tier: str) -
     if tasks:
         await asyncio.gather(*tasks, return_exceptions=True)
 
-    cutoff_short = datetime.now(timezone.utc) - timedelta(hours=24)
-    cutoff_long  = datetime.now(timezone.utc) - timedelta(days=30)
+    cutoff_short = datetime.utcnow() - timedelta(hours=24)
+    cutoff_long  = datetime.utcnow() - timedelta(days=30)
     result = await db.execute(
         select(CardPrice).where(
             CardPrice.card_id == card.id,
@@ -64,7 +64,7 @@ async def _fetch_card_source(db: AsyncSession, card: Card, source: str) -> None:
 
 
 async def get_price_history(db: AsyncSession, card_id: str, source: str, days: int) -> list[dict]:
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.utcnow() - timedelta(days=days)
     result = await db.execute(
         select(CardPrice).where(
             CardPrice.card_id == card_id,

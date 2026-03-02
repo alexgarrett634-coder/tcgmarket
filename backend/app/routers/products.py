@@ -77,7 +77,7 @@ async def get_product_prices(
     if tier != "free" and product.pricecharting_id:
         pc_data = await pricecharting.get_product_price(product.pricecharting_id)
         if pc_data:
-            from datetime import datetime, timezone
+            from datetime import datetime
             for price_type, val in [("loose", pc_data["loose_price"]), ("cib", pc_data["cib_price"]), ("new", pc_data["new_price"])]:
                 if val:
                     db.add(ProductPrice(
@@ -89,8 +89,8 @@ async def get_product_prices(
             await db.commit()
 
     history_days = get_price_history_days(tier)
-    from datetime import datetime, timezone, timedelta
-    cutoff = datetime.now(timezone.utc) - timedelta(days=history_days)
+    from datetime import datetime, timedelta
+    cutoff = datetime.utcnow() - timedelta(days=history_days)
     result = await db.execute(
         select(ProductPrice).where(
             ProductPrice.product_id == product_id,

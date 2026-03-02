@@ -19,7 +19,7 @@ import asyncio
 import csv
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -77,7 +77,7 @@ async def run_import() -> None:
 
     print(f"Loading CSV: {CSV_PATH.name}")
     await create_tables()
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
 
     card_rows: list[dict] = []
     price_rows: list[dict] = []

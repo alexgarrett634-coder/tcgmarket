@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, distinct
+from sqlalchemy import select, distinct, func
 
 from app.database import get_db
 from app.middleware.auth import get_current_user_optional
 from app.models.user import User
 from app.models.card import Card
+from app.models.price import CardPrice
 from app.fetchers import pokemontcg
 from app.services.price_service import fetch_and_store_card_prices, get_price_history
 
@@ -48,18 +49,26 @@ async def search_cards(
     q: str = Query(..., min_length=1),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
+    sort: str = Query("price_desc"),
     current_user: User | None = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db),
 ):
     # Search local DB first (covers all seeded/imported cards)
     offset = (page - 1) * page_size
-    result = await db.execute(
-        select(Card)
-        .where(Card.name.ilike(f"%{q}%"))
-        .order_by(Card.name)
-        .limit(page_size)
-        .offset(offset)
-    )
+    query = select(Card).where(Card.language == "en", Card.name.ilike(f"%{q}%"))
+    if sort == "price_desc":
+        price_sub = (
+            select(CardPrice.card_id, func.max(CardPrice.price_usd).label("max_price"))
+            .where(CardPrice.source == "pricecharting", CardPrice.price_type == "near_mint")
+            .group_by(CardPrice.card_id)
+            .subquery()
+        )
+        query = query.outerjoin(price_sub, Card.id == price_sub.c.card_id).order_by(
+            price_sub.c.max_price.desc().nullslast(), Card.name
+        )
+    else:
+        query = query.order_by(Card.name)
+    result = await db.execute(query.limit(page_size).offset(offset))
     local_cards = list(result.scalars().all())
 
     if local_cards:

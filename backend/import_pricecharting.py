@@ -17,7 +17,7 @@ import csv
 import re
 import sys
 import unicodedata
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -122,7 +122,7 @@ async def run_import() -> None:
     total_db_cards = len(exact_lookup)
     print(f'  {total_db_cards:,} cards loaded ({len(normal_lookup):,} normalized keys)')
 
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
 
     # price_rows: list of dicts for CardPrice inserts
     price_rows: list[dict] = []

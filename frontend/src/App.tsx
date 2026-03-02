@@ -37,9 +37,12 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route element={<Layout />}>
-            <Route path="/markets" element={<Navigate to="/marketplace" replace />} />
-          <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/marketplace/:id" element={<ListingDetail />} />
+            <Route path="/markets" element={<Navigate to="/marketplace/pokemon" replace />} />
+          <Route path="/marketplace" element={<Navigate to="/marketplace/pokemon" replace />} />
+          <Route path="/marketplace/pokemon" element={<Marketplace game="pokemon" />} />
+          <Route path="/marketplace/ygo" element={<Marketplace game="ygo" />} />
+          <Route path="/marketplace/op" element={<Marketplace game="op" />} />
+          <Route path="/marketplace/:id" element={<ListingDetail />} />
             <Route path="/sell/new" element={<RequireAuth><NewListing /></RequireAuth>} />
             <Route path="/seller/dashboard" element={<RequireAuth><SellerDashboard /></RequireAuth>} />
             <Route path="/orders" element={<RequireAuth><Orders /></RequireAuth>} />

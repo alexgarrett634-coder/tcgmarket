@@ -1,6 +1,6 @@
 """Stripe subscription, Connect, and marketplace integration."""
 import stripe
-from datetime import datetime, timezone
+from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi import HTTPException
@@ -128,8 +128,8 @@ async def _handle_subscription_update(db: AsyncSession, sub: dict) -> None:
     subscription.status = sub["status"]
     period_end = sub.get("current_period_end")
     if period_end:
-        subscription.current_period_end = datetime.fromtimestamp(period_end, tz=timezone.utc)
-    subscription.updated_at = datetime.now(timezone.utc)
+        subscription.current_period_end = datetime.utcfromtimestamp(period_end)
+    subscription.updated_at = datetime.utcnow()
     await db.commit()
 
 
@@ -142,7 +142,7 @@ async def _handle_subscription_deleted(db: AsyncSession, sub: dict) -> None:
     if subscription:
         subscription.tier = "free"
         subscription.status = "canceled"
-        subscription.updated_at = datetime.now(timezone.utc)
+        subscription.updated_at = datetime.utcnow()
         await db.commit()
 
 
@@ -161,7 +161,7 @@ async def _handle_payment_success(db: AsyncSession, intent: dict) -> None:
         wallet = result.scalar_one_or_none()
         if wallet:
             wallet.real_credits_usd += amount_usd
-            wallet.updated_at = datetime.now(timezone.utc)
+            wallet.updated_at = datetime.utcnow()
             db.add(WalletTransaction(
                 user_id=user_id,
                 type="deposit",
@@ -187,5 +187,5 @@ async def _handle_account_updated(db: AsyncSession, account: dict) -> None:
     if profile:
         profile.onboarding_complete = True
         profile.stripe_account_id = account["id"]
-        profile.updated_at = datetime.now(timezone.utc)
+        profile.updated_at = datetime.utcnow()
         await db.commit()

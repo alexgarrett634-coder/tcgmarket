@@ -7,17 +7,19 @@ import { useAuth } from '../../context/AuthContext'
 import NotificationBell from './NotificationBell'
 
 const pokemonNav = [
-  { to: '/marketplace', label: 'Marketplace', Icon: ShoppingCart },
-  { to: '/deals',       label: 'Deals',       Icon: Tag },
-  { to: '/prices',      label: 'Pokémon TCG', Icon: BarChart2 },
+  { to: '/marketplace/pokemon', label: 'Marketplace', Icon: ShoppingCart },
+  { to: '/deals',               label: 'Deals',       Icon: Tag },
+  { to: '/prices',              label: 'Pokémon TCG', Icon: BarChart2 },
 ]
 
 const ygoNav = [
-  { to: '/ygo', label: 'Yu-Gi-Oh!', Icon: Layers },
+  { to: '/marketplace/ygo', label: 'Marketplace', Icon: ShoppingCart },
+  { to: '/ygo',             label: 'Yu-Gi-Oh!',  Icon: Layers },
 ]
 
 const opNav = [
-  { to: '/op', label: 'One Piece', Icon: Anchor },
+  { to: '/marketplace/op', label: 'Marketplace', Icon: ShoppingCart },
+  { to: '/op',             label: 'One Piece',   Icon: Anchor },
 ]
 
 const authNav = [

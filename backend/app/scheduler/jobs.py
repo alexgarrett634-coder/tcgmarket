@@ -1,7 +1,7 @@
 """APScheduler job functions — each creates its own DB session."""
 import logging
 import random
-from datetime import datetime, timezone
+from datetime import datetime
 from sqlalchemy import select
 
 from app.database import AsyncSessionLocal
@@ -94,7 +94,7 @@ async def job_update_active_listing_prices() -> None:
             if not card_ids:
                 return
 
-            now = datetime.now(timezone.utc)
+            now = datetime.utcnow()
             count = 0
 
             for card_id in card_ids:

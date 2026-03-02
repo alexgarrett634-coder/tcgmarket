@@ -1,5 +1,5 @@
 """Order creation and lifecycle management."""
-from datetime import datetime, timezone
+from datetime import datetime
 import json
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -104,7 +104,7 @@ async def handle_payment_succeeded(db: AsyncSession, payment_intent: dict) -> No
         return
 
     order.status = "paid"
-    order.paid_at = datetime.now(timezone.utc)
+    order.paid_at = datetime.utcnow()
     order.stripe_transfer_id = payment_intent.get("transfer", {}).get("id") if isinstance(
         payment_intent.get("transfer"), dict) else None
 
@@ -139,7 +139,7 @@ async def mark_shipped(db: AsyncSession, order_id: int, seller_id: int, tracking
         raise HTTPException(400, f"Order status is '{order.status}', expected 'paid'")
     order.status = "shipped"
     order.tracking_number = tracking_number
-    order.shipped_at = datetime.now(timezone.utc)
+    order.shipped_at = datetime.utcnow()
     await db.commit()
     return order
 
@@ -153,7 +153,7 @@ async def mark_completed(db: AsyncSession, order_id: int, buyer_id: int) -> Orde
     if order.status not in ("shipped", "paid"):
         raise HTTPException(400, f"Order status is '{order.status}'")
     order.status = "completed"
-    order.completed_at = datetime.now(timezone.utc)
+    order.completed_at = datetime.utcnow()
 
     # Record the sale price as a market price data point so it influences future prices
     listing = await db.get(Listing, order.listing_id)
@@ -164,7 +164,7 @@ async def mark_completed(db: AsyncSession, order_id: int, buyer_id: int) -> Orde
             source="tcgplayer",
             price_type="market",
             price_usd=order.price_each,
-            recorded_at=datetime.now(timezone.utc),
+            recorded_at=datetime.utcnow(),
         ))
 
     await db.commit()

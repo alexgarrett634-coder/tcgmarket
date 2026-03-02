@@ -1,5 +1,5 @@
 """Evaluate watchlist price alerts and send email + in-app notifications."""
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -20,7 +20,7 @@ async def evaluate_alerts(db: AsyncSession) -> int:
     )
     items = result.scalars().all()
 
-    cooldown = datetime.now(timezone.utc) - timedelta(hours=24)
+    cooldown = datetime.utcnow() - timedelta(hours=24)
 
     for item in items:
         if item.item_type == "card" and item.card_id:

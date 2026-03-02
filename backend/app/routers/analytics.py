@@ -1,6 +1,6 @@
 import csv
 import io
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -85,7 +85,7 @@ async def price_movers(
     db: AsyncSession = Depends(get_db),
 ):
     """Cards with the biggest price change over the selected period."""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.utcnow() - timedelta(days=days)
     result = await db.execute(
         select(CardPrice.card_id, func.min(CardPrice.price_usd), func.max(CardPrice.price_usd))
         .where(CardPrice.recorded_at >= cutoff, CardPrice.source == "tcgplayer", CardPrice.price_type == "market")

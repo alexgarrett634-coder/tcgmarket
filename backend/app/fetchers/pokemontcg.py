@@ -1,5 +1,5 @@
 """Pokemon TCG API (pokemontcg.io) fetcher."""
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
 
 from app.config import settings
@@ -70,14 +70,14 @@ async def upsert_card(db: Any, data: dict) -> None:
         subtypes=data.get("subtypes"),
         image_small=data.get("image_small"),
         image_large=data.get("image_large"),
-        fetched_at=datetime.now(timezone.utc),
+        fetched_at=datetime.utcnow(),
     ).on_conflict_do_update(
         index_elements=["id"],
         set_={
             "name": data["name"],
             "image_small": data.get("image_small"),
             "image_large": data.get("image_large"),
-            "fetched_at": datetime.now(timezone.utc),
+            "fetched_at": datetime.utcnow(),
         },
     )
     await db.execute(stmt)
