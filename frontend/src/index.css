@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background-color: #0f0f14;
+  color: #e5e7eb;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  margin: 0;
+}
+
+/* Holographic shimmer for featured markets */
+@keyframes holo-shimmer {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.holo {
+  background: linear-gradient(
+    270deg,
+    #e3350d22,
+    #7c3aed22,
+    #0ea5e922,
+    #22c55e22,
+    #e3350d22
+  );
+  background-size: 400% 400%;
+  animation: holo-shimmer 6s ease infinite;
+}
+
+/* Deal pulse animation */
+@keyframes deal-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px 2px rgba(245, 158, 11, 0.6); }
+  50%       { opacity: 0.85; box-shadow: 0 0 20px 4px rgba(245, 158, 11, 0.9); }
+}
+
+.deal-exceptional {
+  animation: deal-pulse 1.5s ease-in-out infinite;
+}
+
+/* Landing page animated background orbs */
+@keyframes float-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(60px, -40px) scale(1.08); }
+  66%       { transform: translate(-20px, 30px) scale(0.95); }
+}
+@keyframes float-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(-50px, 50px) scale(1.1); }
+  66%       { transform: translate(40px, -20px) scale(0.92); }
+}
+@keyframes float-c {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%       { transform: translate(30px, 40px) scale(1.05); }
+}
+
+.landing-orb-a {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  top: -120px;
+  left: -80px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, rgba(227,53,13,0.18) 0%, transparent 70%);
+  animation: float-a 18s ease-in-out infinite;
+  filter: blur(1px);
+}
+.landing-orb-b {
+  position: absolute;
+  width: 700px;
+  height: 700px;
+  top: 20%;
+  right: -150px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 60% 40%, rgba(124,58,237,0.14) 0%, transparent 70%);
+  animation: float-b 22s ease-in-out infinite;
+  filter: blur(1px);
+}
+.landing-orb-c {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  bottom: 10%;
+  left: 25%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(14,165,233,0.10) 0%, transparent 70%);
+  animation: float-c 15s ease-in-out infinite;
+  filter: blur(1px);
+}
+
+/* Page fade-in on route change */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-enter {
+  animation: page-enter 0.18s ease-out forwards;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #1a1a24; }
+::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #4b5563; }

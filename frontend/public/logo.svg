@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Card stack (back) -->
+  <rect x="18" y="22" width="54" height="68" rx="6" ry="6" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+  <!-- Card stack (middle) -->
+  <rect x="22" y="18" width="54" height="68" rx="6" ry="6" fill="#1e293b" stroke="#64748b" stroke-width="2"/>
+  <!-- Front card -->
+  <rect x="26" y="14" width="54" height="68" rx="6" ry="6" fill="#0f172a" stroke="#6366f1" stroke-width="2.5"/>
+  <!-- Card inner border -->
+  <rect x="31" y="19" width="44" height="57" rx="4" ry="4" fill="none" stroke="#6366f1" stroke-width="1" opacity="0.5"/>
+  <!-- Star accent top-right -->
+  <circle cx="64" cy="27" r="4" fill="#6366f1" opacity="0.8"/>
+  <!-- Horizontal lines (card text simulation) -->
+  <rect x="33" y="46" width="34" height="3" rx="1.5" fill="#334155"/>
+  <rect x="33" y="52" width="28" height="3" rx="1.5" fill="#334155"/>
+  <rect x="33" y="58" width="32" height="3" rx="1.5" fill="#334155"/>
+  <!-- Card art area -->
+  <rect x="33" y="26" width="34" height="16" rx="3" fill="#1e293b" stroke="#6366f1" stroke-width="1" opacity="0.6"/>
+  <!-- Lightning bolt in art area -->
+  <polygon points="48,28 44,36 49,36 46,42 54,32 49,32" fill="#6366f1" opacity="0.9"/>
+</svg>
