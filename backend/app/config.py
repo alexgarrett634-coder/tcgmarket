@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     )
 
     # Database
-    database_url: str = "sqlite+aiosqlite:///./data/prices.db"
+    database_url: str = "sqlite+aiosqlite:////tmp/prices.db"
 
     # Auth
     secret_key: str = "change-me-to-a-random-32-character-string"
