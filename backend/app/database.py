@@ -3,13 +3,20 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import event
 from app.config import settings
 
-_is_sqlite = settings.database_url.startswith("sqlite")
+_db_url = settings.database_url
+# Railway provides postgres:// or postgresql:// — SQLAlchemy async needs postgresql+asyncpg://
+if _db_url.startswith("postgres://"):
+    _db_url = _db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+elif _db_url.startswith("postgresql://"):
+    _db_url = _db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+_is_sqlite = _db_url.startswith("sqlite")
 
 _engine_kwargs: dict = {"echo": False}
 if _is_sqlite:
     _engine_kwargs["connect_args"] = {"check_same_thread": False}
 
-engine = create_async_engine(settings.database_url, **_engine_kwargs)
+engine = create_async_engine(_db_url, **_engine_kwargs)
 
 
 if _is_sqlite:
