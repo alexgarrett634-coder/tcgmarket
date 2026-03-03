@@ -97,7 +97,7 @@ export default function ListingDetail() {
         {/* Image */}
         <div className="bg-surface-2 rounded-2xl flex items-center justify-center overflow-hidden p-2">
           {listing.grade ? (
-            <PsaSlabFrame image={image} alt={name} grade={listing.grade} size="lg" className="w-full max-w-xs mx-auto" />
+            <PsaSlabFrame image={image ?? undefined} alt={name} grade={listing.grade} size="lg" className="w-full max-w-xs mx-auto" />
           ) : image ? (
             <img src={image} alt={name} className="w-full h-full object-contain aspect-[3/4]" />
           ) : (

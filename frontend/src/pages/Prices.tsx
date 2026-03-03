@@ -58,9 +58,9 @@ export default function Prices() {
     enabled: debouncedQ.length >= 2,
   })
 
-  const { data: allSets } = useQuery({
+  const { data: allSets } = useQuery<{ set_code: string; set_name: string }[]>({
     queryKey: ['all-sets'],
-    queryFn: getCardSets,
+    queryFn: () => getCardSets(),
     staleTime: 300_000,
   })
 

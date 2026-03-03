@@ -30,7 +30,7 @@ export default function ListingCard({ listing }: Props) {
       {listing.grade ? (
         <div className="p-3 flex justify-center bg-gradient-to-b from-surface-2 to-surface">
           <PsaSlabFrame
-            image={image}
+            image={image ?? undefined}
             alt={name}
             grade={listing.grade}
             size="sm"
