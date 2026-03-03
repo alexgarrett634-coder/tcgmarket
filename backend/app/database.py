@@ -51,7 +51,7 @@ async def get_db():
 
 
 async def create_tables():
-    from app.models import user, subscription, card, product, price, watchlist, portfolio, notification  # noqa
+    from app.models import user, subscription, card, product, price, watchlist, portfolio, notification, shipping  # noqa
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 

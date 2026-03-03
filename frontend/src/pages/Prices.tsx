@@ -127,7 +127,7 @@ export default function Prices() {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {cards.map((card) => (
                 <div key={card.id} onClick={() => navigate(`/prices/card/${card.id}`)}
-                  className="bg-surface rounded-xl border border-white/5 overflow-hidden cursor-pointer hover:border-accent/40 hover:shadow-red-glow transition-all group">
+                  className="bg-surface rounded-xl border border-white/5 overflow-hidden cursor-pointer hover:border-accent/40 hover:shadow-glow transition-all group">
                   <div className="bg-black/20">
                     {card.image_small ? (
                       <img src={card.image_small} alt={card.name}
@@ -189,7 +189,7 @@ export default function Prices() {
                 .map((set) => (
                   <button key={set.set_code}
                     onClick={() => { setQ(set.set_name); setDebouncedQ(set.set_name) }}
-                    className="bg-surface border border-white/5 hover:border-accent/40 rounded-xl p-4 text-left transition-all hover:shadow-red-glow group">
+                    className="bg-surface border border-white/5 hover:border-accent/40 rounded-xl p-4 text-left transition-all hover:shadow-glow group">
                     <p className="text-sm font-semibold text-white group-hover:text-accent transition-colors truncate">{set.set_name}</p>
                     <p className="text-xs text-muted mt-0.5 uppercase tracking-wide">{set.set_code}</p>
                   </button>
@@ -203,7 +203,7 @@ export default function Prices() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {HIGH_VALUE.map((c) => (
                 <div key={c.id} onClick={() => navigate(`/prices/card/${c.id}`)}
-                  className="bg-surface border border-white/5 hover:border-accent/40 rounded-xl p-4 cursor-pointer transition-all hover:shadow-red-glow">
+                  className="bg-surface border border-white/5 hover:border-accent/40 rounded-xl p-4 cursor-pointer transition-all hover:shadow-glow">
                   <p className="text-sm font-semibold text-white">{c.name}</p>
                   <p className="text-xs text-muted mt-0.5 mb-2">{c.set}</p>
                   <PriceChip cardId={c.id} />

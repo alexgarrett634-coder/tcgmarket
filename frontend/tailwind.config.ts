@@ -5,18 +5,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: '#0f0f14',
-        surface: '#1a1a24',
-        'surface-2': '#22222e',
-        accent: '#e3350d',
-        'accent-hover': '#c02c0b',
+        bg: '#07080f',
+        surface: '#0d1117',
+        'surface-2': '#131c2e',
+        accent: '#8b5cf6',
+        'accent-hover': '#7c3aed',
+        highlight: '#f0a500',
         yes: '#22c55e',
         no: '#ef4444',
-        gold: '#f59e0b',
+        gold: '#f0a500',
         muted: '#6b7280',
       },
       boxShadow: {
-        'red-glow': '0 0 16px 2px rgba(227,53,13,0.25)',
+        'glow': '0 0 16px 2px rgba(139,92,246,0.25)',
+        'gold-glow': '0 0 16px 2px rgba(240,165,0,0.25)',
       },
     },
   },

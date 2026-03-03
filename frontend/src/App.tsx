@@ -20,6 +20,7 @@ import OnePieceCardDetail from './pages/OnePieceCardDetail'
 import Watchlist from './pages/Watchlist'
 import Portfolio from './pages/Portfolio'
 import Settings from './pages/Settings'
+import Insights from './pages/Insights'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isLoggedIn, isLoading } = useAuth()
@@ -56,6 +57,7 @@ export default function App() {
             <Route path="/watchlist" element={<RequireAuth><Watchlist /></RequireAuth>} />
             <Route path="/portfolio" element={<RequireAuth><Portfolio /></RequireAuth>} />
             <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
+            <Route path="/insights" element={<Insights />} />
           </Route>
         </Routes>
       </BrowserRouter>

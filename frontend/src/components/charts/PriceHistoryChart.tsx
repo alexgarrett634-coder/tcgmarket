@@ -10,7 +10,7 @@ function fmt(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-export default function PriceHistoryChart({ data, color = '#e3350d' }: Props) {
+export default function PriceHistoryChart({ data, color = '#8b5cf6' }: Props) {
   if (!data || data.length === 0) {
     return (
       <div className="flex items-center justify-center h-48 text-muted text-sm">

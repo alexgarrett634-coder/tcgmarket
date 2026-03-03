@@ -18,7 +18,7 @@ router = APIRouter(prefix="/billing", tags=["billing"])
 
 
 class CheckoutRequest(BaseModel):
-    tier: str  # "pro" or "enterprise"
+    tier: str  # "insights", "pro", or "enterprise"
 
 
 @router.post("/checkout")
@@ -27,8 +27,8 @@ async def checkout(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    if body.tier not in ("pro", "enterprise"):
-        raise HTTPException(400, "tier must be 'pro' or 'enterprise'")
+    if body.tier not in ("insights", "pro", "enterprise"):
+        raise HTTPException(400, "tier must be 'insights', 'pro', or 'enterprise'")
 
     result = await db.execute(select(Subscription).where(Subscription.user_id == current_user.id))
     sub = result.scalar_one_or_none()

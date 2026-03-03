@@ -33,7 +33,7 @@ export default function MarketCard({ market, featured }: Props) {
   return (
     <div
       onClick={() => navigate(`/markets/${market.id}`)}
-      className={`relative rounded-xl border border-white/5 p-4 cursor-pointer transition-all hover:shadow-red-glow hover:border-accent/30 ${
+      className={`relative rounded-xl border border-white/5 p-4 cursor-pointer transition-all hover:shadow-glow hover:border-accent/30 ${
         featured ? 'holo' : 'bg-surface'
       }`}
     >

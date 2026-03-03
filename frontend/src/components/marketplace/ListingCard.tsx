@@ -24,7 +24,7 @@ export default function ListingCard({ listing }: Props) {
   return (
     <div
       onClick={() => navigate(`/marketplace/${listing.id}`)}
-      className="bg-surface border border-white/5 rounded-xl overflow-hidden hover:border-accent/30 hover:shadow-red-glow transition-all cursor-pointer group"
+      className="bg-surface border border-white/5 rounded-xl overflow-hidden hover:border-accent/30 hover:shadow-glow transition-all cursor-pointer group"
     >
       {/* Image — PSA slab for graded, plain for ungraded */}
       {listing.grade ? (

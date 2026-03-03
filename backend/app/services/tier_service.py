@@ -6,7 +6,7 @@ from app.models.subscription import Subscription, UsageTracking
 from app.config import settings
 
 
-TIER_ORDER = {"free": 0, "pro": 1, "enterprise": 2}
+TIER_ORDER = {"free": 0, "insights": 1, "pro": 2, "enterprise": 3}
 
 
 async def get_user_tier(db: AsyncSession, user_id: int) -> str:

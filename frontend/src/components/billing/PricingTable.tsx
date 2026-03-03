@@ -63,7 +63,7 @@ export default function PricingTable() {
           key={t.name}
           className={`rounded-xl border p-5 flex flex-col ${
             t.highlight
-              ? 'border-accent bg-accent/5 shadow-red-glow'
+              ? 'border-accent bg-accent/5 shadow-glow'
               : 'border-white/10 bg-surface'
           }`}
         >

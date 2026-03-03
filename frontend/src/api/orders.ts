@@ -39,6 +39,34 @@ export async function createOrder(data: CreateOrderData): Promise<{ order_id: nu
   return res
 }
 
+export async function checkoutIntent(data: CreateOrderData): Promise<{
+  order_id: number
+  client_secret: string | null
+  subtotal: number
+  platform_fee: number
+  total: number
+  fee_rate: number
+  test_mode?: boolean
+  message?: string
+}> {
+  const { data: res } = await client.post('/orders/checkout-intent', data)
+  return res
+}
+
+export async function shippingLabelQuote(orderId: number, dims: {
+  length_in: number; width_in: number; height_in: number; weight_oz: number
+}): Promise<{ order_id: number; label_fee: number; carrier: string; service: string }> {
+  const { data } = await client.post(`/orders/${orderId}/shipping-label/quote`, dims)
+  return data
+}
+
+export async function createShippingLabel(orderId: number, dims: {
+  length_in: number; width_in: number; height_in: number; weight_oz: number
+}): Promise<{ label_id: number; order_id: number; label_fee: number; status: string; message: string }> {
+  const { data } = await client.post(`/orders/${orderId}/shipping-label/create`, dims)
+  return data
+}
+
 export async function getOrders(): Promise<Order[]> {
   const { data } = await client.get('/orders')
   return data

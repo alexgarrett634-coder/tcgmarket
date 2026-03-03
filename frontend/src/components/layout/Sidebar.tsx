@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   ShoppingCart, Tag, BarChart2, PackagePlus,
-  ClipboardList, Store, Eye, Briefcase, Settings, Layers, Anchor,
+  ClipboardList, Store, Eye, Briefcase, Settings, Layers, Anchor, TrendingUp,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import NotificationBell from './NotificationBell'
@@ -30,6 +30,7 @@ const authNav = [
   { to: '/seller/dashboard',  label: 'Seller Hub', Icon: Store },
   { to: '/watchlist',         label: 'Watchlist',  Icon: Eye },
   { to: '/portfolio',         label: 'Portfolio',  Icon: Briefcase },
+  { to: '/insights',          label: 'Insights',   Icon: TrendingUp },
   { to: '/settings',          label: 'Settings',   Icon: Settings },
 ]
 
@@ -86,10 +87,13 @@ export default function Sidebar() {
           <NavItem key={item.to} {...item} />
         ))}
 
+        <div className="my-2 mx-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }} />
+        <NavItem to="/insights" label="Insights" Icon={TrendingUp} />
+
         {isLoggedIn && authNav.length > 0 && (
           <>
             <div className="my-2 mx-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }} />
-            {authNav.map((item) => (
+            {authNav.filter(i => i.to !== '/insights').map((item) => (
               <NavItem key={item.to} {...item} />
             ))}
           </>

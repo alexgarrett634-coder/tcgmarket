@@ -3,8 +3,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { getMySellerProfile, onboardSeller, getStripeDashboardLink } from '../api/sellers'
 import { getMyListings, updateListing } from '../api/listings'
-import { getSellingOrders, markShipped } from '../api/orders'
+import { getSellingOrders, markShipped, shippingLabelQuote, createShippingLabel } from '../api/orders'
 import type { Order } from '../api/orders'
+
+interface ShippingDims {
+  length_in: number; width_in: number; height_in: number; weight_oz: number
+}
+const DEFAULT_DIMS: ShippingDims = { length_in: 0, width_in: 0, height_in: 0, weight_oz: 0 }
 
 const STATUS_COLOR: Record<string, string> = {
   pending: 'text-yellow-400',
@@ -19,6 +24,11 @@ export default function SellerDashboard() {
   const qc = useQueryClient()
   const [tab, setTab] = useState<'listings' | 'orders'>('listings')
   const [trackingInputs, setTrackingInputs] = useState<Record<number, string>>({})
+  const [labelModal, setLabelModal] = useState<number | null>(null) // order_id
+  const [labelDims, setLabelDims] = useState<ShippingDims>(DEFAULT_DIMS)
+  const [labelQuote, setLabelQuote] = useState<number | null>(null)
+  const [labelCreated, setLabelCreated] = useState<Record<number, string>>({})
+  const [labelLoading, setLabelLoading] = useState(false)
 
   const { data: profile, refetch: refetchProfile } = useQuery({
     queryKey: ['seller-profile'],
@@ -55,18 +65,52 @@ export default function SellerDashboard() {
     qc.invalidateQueries({ queryKey: ['selling-orders'] })
   }
 
+  async function handleLabelQuote() {
+    if (!labelModal) return
+    setLabelLoading(true)
+    try {
+      const q = await shippingLabelQuote(labelModal, labelDims)
+      setLabelQuote(q.label_fee)
+    } finally {
+      setLabelLoading(false)
+    }
+  }
+
+  async function handleCreateLabel() {
+    if (!labelModal) return
+    setLabelLoading(true)
+    try {
+      const result = await createShippingLabel(labelModal, labelDims)
+      setLabelCreated(prev => ({ ...prev, [labelModal]: result.message }))
+      setLabelModal(null)
+      setLabelQuote(null)
+      setLabelDims(DEFAULT_DIMS)
+    } finally {
+      setLabelLoading(false)
+    }
+  }
+
   if (!profile?.onboarding_complete) {
     return (
       <div className="max-w-lg mx-auto text-center py-16">
         <div className="text-5xl mb-4">🏪</div>
         <h1 className="text-2xl font-black text-white mb-2">Seller Hub</h1>
-        <p className="text-muted text-sm mb-8">Connect your Stripe account to start selling and receiving payouts.</p>
+        <p className="text-muted text-sm mb-4">Connect your bank account via Stripe to start selling and receiving payouts directly to your bank.</p>
+        <div className="bg-accent/10 border border-accent/30 rounded-xl p-4 mb-6 text-sm text-left">
+          <p className="text-white font-semibold mb-1">What happens when you connect?</p>
+          <ul className="text-muted space-y-1 text-xs">
+            <li>• Stripe securely links your bank account</li>
+            <li>• You receive payouts within 2–7 days of each sale</li>
+            <li>• TCGMarket collects 6% platform fee from buyers</li>
+          </ul>
+        </div>
         <button
           onClick={handleOnboard}
-          className="px-8 py-3 bg-accent hover:bg-accent-hover text-white font-bold rounded-xl transition-colors"
+          className="px-8 py-3 bg-accent hover:bg-accent-hover text-white font-bold rounded-xl transition-colors w-full"
         >
-          Connect Stripe & Start Selling
+          Connect Bank Account via Stripe
         </button>
+        <p className="text-xs text-muted mt-3">Powered by Stripe Connect. Your banking info is never stored by TCGMarket.</p>
       </div>
     )
   }
@@ -179,6 +223,56 @@ export default function SellerDashboard() {
         </div>
       )}
 
+      {/* Shipping label modal */}
+      {labelModal !== null && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-surface border border-white/10 rounded-2xl p-6 w-full max-w-sm">
+            <h3 className="text-white font-black text-lg mb-4">Generate Shipping Label</h3>
+            <p className="text-xs text-muted mb-4">Order #{labelModal} — Enter package dimensions to get a shipping quote.</p>
+            <div className="space-y-3 mb-4">
+              {[
+                { key: 'length_in', label: 'Length (in)' },
+                { key: 'width_in', label: 'Width (in)' },
+                { key: 'height_in', label: 'Height (in)' },
+                { key: 'weight_oz', label: 'Weight (oz)' },
+              ].map(({ key, label }) => (
+                <div key={key} className="flex items-center gap-3">
+                  <label className="text-sm text-muted w-28 flex-shrink-0">{label}</label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={0.1}
+                    value={(labelDims as any)[key] || ''}
+                    onChange={(e) => setLabelDims(d => ({ ...d, [key]: parseFloat(e.target.value) || 0 }))}
+                    className="flex-1 px-3 py-2 bg-surface-2 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-accent"
+                  />
+                </div>
+              ))}
+            </div>
+            {labelQuote !== null && (
+              <div className="bg-surface-2 rounded-xl p-3 mb-4 flex justify-between items-center">
+                <span className="text-sm text-muted">USPS Estimated Fee</span>
+                <span className="text-gold font-black text-lg">${labelQuote.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <button onClick={() => setLabelModal(null)} className="flex-1 py-2 border border-white/20 rounded-lg text-sm text-muted hover:text-white transition-colors">
+                Cancel
+              </button>
+              {labelQuote === null ? (
+                <button onClick={handleLabelQuote} disabled={labelLoading} className="flex-1 py-2 bg-surface-2 border border-white/20 hover:border-accent text-white text-sm rounded-lg transition-colors disabled:opacity-50">
+                  {labelLoading ? 'Getting quote…' : 'Get Quote'}
+                </button>
+              ) : (
+                <button onClick={handleCreateLabel} disabled={labelLoading} className="flex-1 py-2 bg-accent hover:bg-accent-hover text-white font-bold text-sm rounded-lg transition-colors disabled:opacity-50">
+                  {labelLoading ? 'Creating…' : `Generate — $${labelQuote.toFixed(2)}`}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Orders tab */}
       {tab === 'orders' && (
         <div>
@@ -201,20 +295,32 @@ export default function SellerDashboard() {
                     </div>
                   )}
                   {o.status === 'paid' && (
-                    <div className="flex items-center gap-2 mt-3">
-                      <input
-                        type="text"
-                        placeholder="Tracking number"
-                        value={trackingInputs[o.id] ?? ''}
-                        onChange={(e) => setTrackingInputs(t => ({ ...t, [o.id]: e.target.value }))}
-                        className="flex-1 px-2 py-1.5 bg-surface-2 border border-white/10 rounded-lg text-xs text-white placeholder-muted focus:outline-none focus:border-accent"
-                      />
-                      <button
-                        onClick={() => handleShip(o.id)}
-                        className="px-3 py-1.5 bg-accent hover:bg-accent-hover text-white text-xs font-medium rounded-lg transition-colors"
-                      >
-                        Mark Shipped
-                      </button>
+                    <div className="space-y-2 mt-3">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          placeholder="Tracking number"
+                          value={trackingInputs[o.id] ?? ''}
+                          onChange={(e) => setTrackingInputs(t => ({ ...t, [o.id]: e.target.value }))}
+                          className="flex-1 px-2 py-1.5 bg-surface-2 border border-white/10 rounded-lg text-xs text-white placeholder-muted focus:outline-none focus:border-accent"
+                        />
+                        <button
+                          onClick={() => handleShip(o.id)}
+                          className="px-3 py-1.5 bg-accent hover:bg-accent-hover text-white text-xs font-medium rounded-lg transition-colors"
+                        >
+                          Mark Shipped
+                        </button>
+                      </div>
+                      {labelCreated[o.id] ? (
+                        <p className="text-xs text-gold">{labelCreated[o.id]}</p>
+                      ) : (
+                        <button
+                          onClick={() => { setLabelModal(o.id); setLabelQuote(null); setLabelDims(DEFAULT_DIMS) }}
+                          className="text-xs text-accent hover:text-accent-hover transition-colors underline"
+                        >
+                          Generate Shipping Label
+                        </button>
+                      )}
                     </div>
                   )}
                   {o.tracking_number && (

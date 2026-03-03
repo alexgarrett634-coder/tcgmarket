@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getListing } from '../api/listings'
-import { createOrder } from '../api/orders'
+import { createOrder, checkoutIntent } from '../api/orders'
 import { useAuth } from '../context/AuthContext'
 import PsaSlabFrame from '../components/shared/PsaSlabFrame'
 
@@ -31,8 +31,9 @@ export default function ListingDetail() {
 
   const [qty, setQty] = useState(1)
   const [buying, setBuying] = useState(false)
-  const [showForm, setShowForm] = useState(false)
+  const [step, setStep] = useState<'idle' | 'address' | 'confirm' | 'done'>('idle')
   const [addr, setAddr] = useState({ name: '', line1: '', city: '', state: '', postal_code: '', country: 'US' })
+  const [feePreview, setFeePreview] = useState<{ subtotal: number; platform_fee: number; total: number } | null>(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -55,19 +56,34 @@ export default function ListingDetail() {
 
   if (!listing) return <div className="text-center py-20 text-muted">Listing not found</div>
 
+  const PLATFORM_FEE_RATE = 0.06
   const image = listing.card?.image_large ?? listing.card?.image_small ?? listing.product?.image_url
   const name = listing.card?.name ?? listing.product?.name ?? listing.title
-  const total = listing.price * qty
+
+  const subtotal = listing.price * qty
+  const platformFee = Math.round(subtotal * PLATFORM_FEE_RATE * 100) / 100
+  const total = Math.round((subtotal + platformFee) * 100) / 100
 
   async function handleBuy() {
-    setShowForm(true)
+    if (!isLoggedIn) { setStep('address'); return }
+    setStep('address')
   }
 
-  async function handleSubmitOrder() {
+  async function handleAddressNext() {
+    if (!addr.name || !addr.line1 || !addr.city || !addr.state || !addr.postal_code) {
+      setError('Please fill in all address fields.')
+      return
+    }
+    setError('')
+    setFeePreview({ subtotal, platform_fee: platformFee, total })
+    setStep('confirm')
+  }
+
+  async function handleConfirmOrder() {
     setError('')
     setBuying(true)
     try {
-      const result = await createOrder({
+      const result = await checkoutIntent({
         listing_id: listing!.id,
         quantity: qty,
         shipping_address: addr,
@@ -75,13 +91,12 @@ export default function ListingDetail() {
       if (result.test_mode) {
         setSuccess(`Order #${result.order_id} created (test mode — no payment charged). ${result.message}`)
       } else {
-        setSuccess(`Order #${result.order_id} created! Redirecting to payment…`)
-        // In production: use Stripe.js to confirm the payment intent
-        // stripe.confirmPayment({ clientSecret: result.client_secret, ... })
+        setSuccess(`Order #${result.order_id} placed! Total: $${result.total?.toFixed(2) ?? total.toFixed(2)}. Your payment is being processed.`)
       }
-      setShowForm(false)
+      setStep('done')
     } catch (e: any) {
       setError(e?.response?.data?.detail || 'Something went wrong. Please try again.')
+      setStep('confirm')
     } finally {
       setBuying(false)
     }
@@ -144,8 +159,8 @@ export default function ListingDetail() {
             </div>
           )}
 
-          {/* Buy section */}
-          {listing.status === 'active' && !success && !showForm && (
+          {/* Buy section — Step: idle */}
+          {listing.status === 'active' && step === 'idle' && (
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <label className="text-sm text-muted">Qty:</label>
@@ -162,19 +177,19 @@ export default function ListingDetail() {
                 onClick={handleBuy}
                 className="flex-1 py-3 bg-accent hover:bg-accent-hover text-white font-bold rounded-xl transition-colors"
               >
-                Buy Now — ${total.toFixed(2)}
+                Buy Now — ${subtotal.toFixed(2)}
               </button>
             </div>
           )}
 
-          {listing.status !== 'active' && !success && (
+          {listing.status !== 'active' && step === 'idle' && (
             <div className="px-4 py-3 bg-white/5 rounded-xl text-sm text-muted text-center">
               This listing is {listing.status}
             </div>
           )}
 
-          {/* Shipping form */}
-          {showForm && !success && !isLoggedIn && (
+          {/* Step: address — auth gate */}
+          {step === 'address' && !isLoggedIn && (
             <div className="bg-surface border border-accent/20 rounded-xl p-4 space-y-3 text-center">
               <p className="text-white font-semibold text-sm">Sign in to complete your purchase</p>
               <p className="text-muted text-xs">Create a free account to buy cards and track your orders.</p>
@@ -182,10 +197,12 @@ export default function ListingDetail() {
                 <button onClick={() => navigate('/login')} className="px-4 py-2 border border-white/20 rounded-lg text-sm text-white hover:border-white/40 transition-colors">Sign In</button>
                 <button onClick={() => navigate('/register')} className="px-4 py-2 bg-accent hover:bg-accent-hover text-white text-sm font-semibold rounded-lg transition-colors">Create Account</button>
               </div>
-              <button onClick={() => setShowForm(false)} className="text-xs text-muted hover:text-white transition-colors">Cancel</button>
+              <button onClick={() => setStep('idle')} className="text-xs text-muted hover:text-white transition-colors">Cancel</button>
             </div>
           )}
-          {showForm && !success && isLoggedIn && (
+
+          {/* Step: address form */}
+          {step === 'address' && isLoggedIn && (
             <div className="bg-surface border border-white/10 rounded-xl p-4 space-y-3">
               <h3 className="font-bold text-white text-sm">Shipping Address</h3>
               {(['name', 'line1', 'city', 'state', 'postal_code'] as const).map((field) => (
@@ -199,25 +216,49 @@ export default function ListingDetail() {
               ))}
               {error && <p className="text-red-400 text-xs">{error}</p>}
               <div className="flex gap-2">
-                <button
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 py-2 border border-white/20 rounded-lg text-sm text-muted hover:text-white transition-colors"
-                >
-                  Cancel
+                <button onClick={() => setStep('idle')} className="flex-1 py-2 border border-white/20 rounded-lg text-sm text-muted hover:text-white transition-colors">Cancel</button>
+                <button onClick={handleAddressNext} className="flex-1 py-2 bg-accent hover:bg-accent-hover text-white font-bold rounded-lg text-sm transition-colors">
+                  Continue →
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step: confirm with fee breakdown */}
+          {step === 'confirm' && feePreview && (
+            <div className="bg-surface border border-white/10 rounded-xl p-4 space-y-3">
+              <h3 className="font-bold text-white text-sm">Order Summary</h3>
+              <div className="space-y-1.5 text-sm">
+                <div className="flex justify-between text-gray-300">
+                  <span>Subtotal ({qty}× card)</span>
+                  <span>${feePreview.subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-muted">
+                  <span>Platform fee (6%)</span>
+                  <span>${feePreview.platform_fee.toFixed(2)}</span>
+                </div>
+                <div className="border-t border-white/10 pt-1.5 flex justify-between font-black text-white text-base">
+                  <span>Total</span>
+                  <span className="text-gold">${feePreview.total.toFixed(2)}</span>
+                </div>
+              </div>
+              <p className="text-xs text-muted">Shipping to: {addr.name}, {addr.city}, {addr.state} {addr.postal_code}</p>
+              {error && <p className="text-red-400 text-xs">{error}</p>}
+              <div className="flex gap-2">
+                <button onClick={() => setStep('address')} className="flex-1 py-2 border border-white/20 rounded-lg text-sm text-muted hover:text-white transition-colors">Back</button>
                 <button
-                  onClick={handleSubmitOrder}
+                  onClick={handleConfirmOrder}
                   disabled={buying}
                   className="flex-1 py-2 bg-accent hover:bg-accent-hover text-white font-bold rounded-lg text-sm transition-colors disabled:opacity-50"
                 >
-                  {buying ? 'Processing…' : `Confirm — $${total.toFixed(2)}`}
+                  {buying ? 'Processing…' : `Confirm & Pay $${feePreview.total.toFixed(2)}`}
                 </button>
               </div>
             </div>
           )}
 
           {/* Success */}
-          {success && (
+          {step === 'done' && success && (
             <div className="px-4 py-3 bg-yes/10 border border-yes/20 rounded-xl text-sm text-yes">
               {success}
             </div>

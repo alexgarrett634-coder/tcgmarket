@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     stripe_webhook_secret: str = ""
     stripe_pro_price_id: str = ""
     stripe_enterprise_price_id: str = ""
+    stripe_insights_price_id: str = ""
 
     # Frontend URL
     frontend_url: str = "http://localhost:5173"

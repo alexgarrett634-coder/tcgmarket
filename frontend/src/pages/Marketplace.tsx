@@ -39,7 +39,7 @@ function GridCard({ listing, onClick }: { listing: Listing; onClick: () => void 
   const isPsa = !!listing.grade
   return (
     <div onClick={onClick}
-      className="bg-surface border border-white/5 rounded-xl overflow-hidden hover:border-accent/30 hover:shadow-red-glow transition-all cursor-pointer group">
+      className="bg-surface border border-white/5 rounded-xl overflow-hidden hover:border-accent/30 hover:shadow-glow transition-all cursor-pointer group">
       <div className={`bg-surface-2 flex items-center justify-center overflow-hidden relative ${isPsa ? 'p-2' : 'aspect-[3/4]'}`}>
         {isPsa ? (
           <PsaSlabFrame image={image ?? undefined} alt={name} grade={listing.grade!} size="sm" className="w-full group-hover:scale-105 transition-transform duration-300" />

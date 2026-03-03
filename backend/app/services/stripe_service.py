@@ -54,11 +54,12 @@ async def create_wallet_deposit_intent(user_id: int, amount_usd: float, stripe_c
 
 async def create_checkout_session(user_id: int, tier: str, stripe_customer_id: str) -> str:
     """Create a Stripe Checkout Session for a subscription. Returns URL."""
-    price_id = (
-        settings.stripe_enterprise_price_id
-        if tier == "enterprise"
-        else settings.stripe_pro_price_id
-    )
+    if tier == "enterprise":
+        price_id = settings.stripe_enterprise_price_id
+    elif tier == "insights":
+        price_id = settings.stripe_insights_price_id
+    else:
+        price_id = settings.stripe_pro_price_id
     if not price_id:
         raise HTTPException(503, "Stripe is not configured")
 
@@ -120,6 +121,8 @@ async def _handle_subscription_update(db: AsyncSession, sub: dict) -> None:
         tier = "enterprise"
     elif price_id == settings.stripe_pro_price_id:
         tier = "pro"
+    elif price_id and settings.stripe_insights_price_id and price_id == settings.stripe_insights_price_id:
+        tier = "insights"
     else:
         tier = "free"
 
