@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getListing } from '../api/listings'
 import { createOrder, checkoutIntent } from '../api/orders'
+import { getMessages, sendMessage } from '../api/messages'
 import { useAuth } from '../context/AuthContext'
 import PsaSlabFrame from '../components/shared/PsaSlabFrame'
 
@@ -36,12 +37,39 @@ export default function ListingDetail() {
   const [feePreview, setFeePreview] = useState<{ subtotal: number; platform_fee: number; total: number } | null>(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [msgText, setMsgText] = useState('')
+  const [sendingMsg, setSendingMsg] = useState(false)
+  const msgEndRef = useRef<HTMLDivElement>(null)
+  const { user } = useAuth()
 
   const { data: listing, isLoading } = useQuery({
     queryKey: ['listing', id],
     queryFn: () => getListing(Number(id)),
     enabled: !!id,
   })
+
+  const { data: messages = [], refetch: refetchMsgs } = useQuery({
+    queryKey: ['listing-messages', id],
+    queryFn: () => getMessages(Number(id)),
+    enabled: !!id && isLoggedIn,
+    refetchInterval: 10_000,
+  })
+
+  useEffect(() => {
+    msgEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  async function handleSendMsg() {
+    if (!msgText.trim() || !id) return
+    setSendingMsg(true)
+    try {
+      await sendMessage(Number(id), msgText.trim())
+      setMsgText('')
+      await refetchMsgs()
+    } finally {
+      setSendingMsg(false)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -57,8 +85,10 @@ export default function ListingDetail() {
   if (!listing) return <div className="text-center py-20 text-muted">Listing not found</div>
 
   const PLATFORM_FEE_RATE = 0.06
-  const image = listing.card?.image_large ?? listing.card?.image_small ?? listing.product?.image_url
+  // Prefer seller-provided photo over card image from database
+  const image = listing.image_url ?? listing.card?.image_large ?? listing.card?.image_small ?? listing.product?.image_url
   const name = listing.card?.name ?? listing.product?.name ?? listing.title
+  const isSeller = user && listing.seller_id === user.id
 
   const subtotal = listing.price * qty
   const platformFee = Math.round(subtotal * PLATFORM_FEE_RATE * 100) / 100
@@ -264,6 +294,70 @@ export default function ListingDetail() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* ── Messaging panel ── */}
+      <div className="mt-8 bg-surface border border-white/5 rounded-2xl p-5">
+        <h2 className="text-base font-bold text-white mb-4">
+          {isSeller ? 'Buyer Messages' : 'Message the Seller'}
+        </h2>
+
+        {!isLoggedIn ? (
+          <div className="text-center py-6">
+            <p className="text-muted text-sm mb-3">Sign in to message the seller</p>
+            <div className="flex gap-2 justify-center">
+              <button onClick={() => navigate('/login')} className="px-4 py-2 border border-white/20 rounded-lg text-sm text-white hover:border-white/40 transition-colors">Sign In</button>
+              <button onClick={() => navigate('/register')} className="px-4 py-2 bg-accent hover:bg-accent-hover text-white text-sm font-semibold rounded-lg transition-colors">Create Account</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Message thread */}
+            <div className="space-y-2 max-h-72 overflow-y-auto mb-4 pr-1">
+              {messages.length === 0 && (
+                <p className="text-muted text-sm text-center py-8">
+                  {isSeller ? 'No messages yet. Buyers can message you here.' : 'No messages yet. Ask the seller a question!'}
+                </p>
+              )}
+              {messages.map((msg) => {
+                const isMe = user && msg.sender_id === user.id
+                return (
+                  <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-xs px-3 py-2 rounded-2xl text-sm ${isMe ? 'bg-accent text-white' : 'bg-surface-2 text-gray-200'}`}>
+                      {!isMe && <p className="text-xs text-muted mb-0.5">{msg.sender_email?.split('@')[0]}</p>}
+                      <p>{msg.content}</p>
+                      <p className={`text-xs mt-0.5 ${isMe ? 'text-white/60' : 'text-muted'}`}>
+                        {new Date(msg.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                )
+              })}
+              <div ref={msgEndRef} />
+            </div>
+
+            {/* Input */}
+            {(listing.status === 'active' || isSeller) && (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder={isSeller ? 'Reply to buyer…' : 'Ask about condition, shipping, trades…'}
+                  value={msgText}
+                  onChange={(e) => setMsgText(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMsg()}
+                  className="flex-1 px-3 py-2 bg-surface-2 border border-white/10 rounded-xl text-sm text-white placeholder-muted focus:outline-none focus:border-accent"
+                />
+                <button
+                  onClick={handleSendMsg}
+                  disabled={sendingMsg || !msgText.trim()}
+                  className="px-4 py-2 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50"
+                >
+                  Send
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   )

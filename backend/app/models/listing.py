@@ -34,6 +34,7 @@ class Listing(Base):
     status: Mapped[str] = mapped_column(String(20), default="active", nullable=False)  # active, sold, cancelled
     grade: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # PSA/BGS grade: 6-10; None = raw/ungraded
     grading_company: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)  # 'PSA', 'BGS', etc.
+    image_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)  # Seller-uploaded product photo
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 

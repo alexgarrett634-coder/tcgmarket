@@ -38,6 +38,7 @@ export default function NewListing() {
   const [price, setPrice] = useState('')
   const [quantity, setQuantity] = useState('1')
   const [description, setDescription] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
@@ -81,6 +82,7 @@ export default function NewListing() {
         quantity: Number(quantity),
         price: Number(price),
         description: description || undefined,
+        image_url: imageUrl.trim() || undefined,
       })
       navigate('/marketplace')
     } catch (e: any) {
@@ -224,6 +226,22 @@ export default function NewListing() {
               className="w-full px-3 py-2.5 bg-surface border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-accent"
             />
           </div>
+        </div>
+
+        {/* Product photo URL */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Product Photo URL (optional)</label>
+          <input
+            type="url"
+            placeholder="https://i.imgur.com/your-photo.jpg"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            className="w-full px-3 py-2.5 bg-surface border border-white/10 rounded-xl text-sm text-white placeholder-muted focus:outline-none focus:border-accent"
+          />
+          {imageUrl.trim() && (
+            <img src={imageUrl.trim()} alt="Preview" className="mt-2 h-24 object-contain rounded-lg border border-white/10" onError={(e) => (e.currentTarget.style.display = 'none')} />
+          )}
+          <p className="text-xs text-muted mt-1">Upload your photo to Imgur, Google Photos, or similar and paste the direct link here.</p>
         </div>
 
         {/* Description */}

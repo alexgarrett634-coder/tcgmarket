@@ -51,7 +51,7 @@ async def get_db():
 
 
 async def create_tables():
-    from app.models import user, subscription, card, product, price, watchlist, portfolio, notification, shipping  # noqa
+    from app.models import user, subscription, card, product, price, watchlist, portfolio, notification, shipping, message  # noqa
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
@@ -60,11 +60,14 @@ async def migrate_schema():
     """Add new columns to existing tables without losing data."""
     async with engine.begin() as conn:
         if not _is_sqlite:
-            await conn.execute(text(
-                "ALTER TABLE cards ADD COLUMN IF NOT EXISTS set_release_date DATE"
-            ))
+            await conn.execute(text("ALTER TABLE cards ADD COLUMN IF NOT EXISTS set_release_date DATE"))
+            await conn.execute(text("ALTER TABLE listings ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)"))
         else:
             rows = await conn.execute(text("PRAGMA table_info(cards)"))
             cols = [r[1] for r in rows.fetchall()]
             if "set_release_date" not in cols:
                 await conn.execute(text("ALTER TABLE cards ADD COLUMN set_release_date DATE"))
+            rows = await conn.execute(text("PRAGMA table_info(listings)"))
+            cols = [r[1] for r in rows.fetchall()]
+            if "image_url" not in cols:
+                await conn.execute(text("ALTER TABLE listings ADD COLUMN image_url VARCHAR(500)"))

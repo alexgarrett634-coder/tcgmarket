@@ -9,7 +9,7 @@ from app.scheduler.runner import start_scheduler, stop_scheduler
 from app.routers import (
     auth, cards, products, listings, orders, sellers, deals,
     watchlist, portfolio, notifications, wallet,
-    billing, api_keys, ygo, onepiece, insights,
+    billing, api_keys, ygo, onepiece, insights, messages,
 )
 
 
@@ -64,6 +64,7 @@ app.include_router(api_keys.router,      prefix=PREFIX)
 app.include_router(ygo.router,            prefix=PREFIX)
 app.include_router(onepiece.router,       prefix=PREFIX)
 app.include_router(insights.router,       prefix=PREFIX)
+app.include_router(messages.router,       prefix=PREFIX)
 
 
 @app.get("/health")

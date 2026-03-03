@@ -30,6 +30,7 @@ export interface Listing {
   status: string
   grade: number | null
   grading_company: string | null
+  image_url: string | null
   created_at: string
 }
 
@@ -75,6 +76,7 @@ export interface CreateListingData {
   condition: string
   quantity: number
   price: number
+  image_url?: string
 }
 
 export async function createListing(data: CreateListingData): Promise<Listing> {

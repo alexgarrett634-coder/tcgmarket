@@ -47,6 +47,7 @@ def _fmt(listing: Listing) -> dict:
         "status": listing.status,
         "grade": listing.grade,
         "grading_company": listing.grading_company,
+        "image_url": listing.image_url,
         "created_at": listing.created_at.isoformat(),
     }
 
@@ -120,6 +121,7 @@ class CreateListingRequest(BaseModel):
     price: float
     grade: Optional[int] = None          # PSA/BGS grade 6–10; omit for raw
     grading_company: Optional[str] = None  # 'PSA', 'BGS', etc.
+    image_url: Optional[str] = None      # Seller-provided product photo URL
 
 
 @router.post("", status_code=201)
