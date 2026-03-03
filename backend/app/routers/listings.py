@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import delete as sql_delete
 from pydantic import BaseModel
 from typing import Optional
 
@@ -48,6 +49,14 @@ def _fmt(listing: Listing) -> dict:
         "grading_company": listing.grading_company,
         "created_at": listing.created_at.isoformat(),
     }
+
+
+@router.delete("/admin/clear-listings")
+async def clear_all_listings(db: AsyncSession = Depends(get_db)):
+    """TEMPORARY: Delete all listings. Remove this endpoint after use."""
+    await db.execute(sql_delete(Listing))
+    await db.commit()
+    return {"deleted": "all listings"}
 
 
 @router.get("")

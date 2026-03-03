@@ -14,6 +14,10 @@ async def fetch_and_store_card_prices(db: AsyncSession, card: Card, tier: str) -
     sources = []
     if tier_gte(tier, "pro"):
         sources.extend(["ebay", "pricecharting"])
+    # Always try pokemontcg.io for Pokemon cards when API key is configured
+    from app.config import settings as _settings
+    if card.language == "en" and _settings.pokemontcg_api_key:
+        sources.insert(0, "pokemontcg")
 
     tasks = []
     for source in sources:
@@ -48,6 +52,12 @@ async def _fetch_card_source(db: AsyncSession, card: Card, source: str) -> None:
             if listings:
                 avg = sum(l["price"] for l in listings) / len(listings)
                 prices = [{"source": "ebay", "price_type": "listed", "price_usd": avg}]
+        elif source == "pokemontcg":
+            from app.fetchers.pokemontcg import fetch_card_prices as _ptcg_prices
+            raw_id = card.id.replace("tcg-", "")
+            price_map = await _ptcg_prices(raw_id)
+            for price_type, price_usd in price_map.items():
+                prices.append({"source": "tcgplayer", "price_type": price_type, "price_usd": price_usd})
         elif source == "pricecharting":
             pass
 

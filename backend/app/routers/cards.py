@@ -20,10 +20,10 @@ async def list_sets(
 ):
     """Return all distinct sets for a given language, ordered by set name."""
     result = await db.execute(
-        select(Card.set_code, Card.set_name)
+        select(Card.set_code, Card.set_name, func.min(Card.set_release_date).label("release_date"))
         .where(Card.language == language)
-        .distinct()
-        .order_by(Card.set_name)
+        .group_by(Card.set_code, Card.set_name)
+        .order_by(func.min(Card.set_release_date).asc().nullslast(), Card.set_name)
     )
     rows = result.all()
     return [{"set_code": r.set_code, "set_name": r.set_name} for r in rows]

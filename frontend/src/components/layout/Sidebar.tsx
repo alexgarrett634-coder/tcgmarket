@@ -14,11 +14,13 @@ const pokemonNav = [
 
 const ygoNav = [
   { to: '/marketplace/ygo', label: 'Marketplace', Icon: ShoppingCart },
+  { to: '/deals',           label: 'Deals',       Icon: Tag },
   { to: '/ygo',             label: 'Yu-Gi-Oh!',  Icon: Layers },
 ]
 
 const opNav = [
   { to: '/marketplace/op', label: 'Marketplace', Icon: ShoppingCart },
+  { to: '/deals',          label: 'Deals',       Icon: Tag },
   { to: '/op',             label: 'One Piece',   Icon: Anchor },
 ]
 

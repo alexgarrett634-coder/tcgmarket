@@ -1,9 +1,10 @@
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.database import create_tables
+from app.database import create_tables, migrate_schema, AsyncSessionLocal
 from app.scheduler.runner import start_scheduler, stop_scheduler
 from app.routers import (
     auth, cards, products, listings, orders, sellers, deals,
@@ -12,9 +13,21 @@ from app.routers import (
 )
 
 
+async def _populate_set_dates_bg():
+    """Background task: populate Pokemon set release dates from pokemontcg.io."""
+    try:
+        from app.fetchers.pokemontcg import populate_set_dates
+        async with AsyncSessionLocal() as db:
+            await populate_set_dates(db)
+    except Exception:
+        pass
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await create_tables()
+    await migrate_schema()
+    asyncio.create_task(_populate_set_dates_bg())
     start_scheduler()
     yield
     stop_scheduler()

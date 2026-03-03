@@ -1,5 +1,5 @@
-from datetime import datetime
-from sqlalchemy import String, DateTime
+from datetime import datetime, date
+from sqlalchemy import String, DateTime, Date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
@@ -19,5 +19,6 @@ class Card(Base):
     image_large: Mapped[str | None] = mapped_column(String(500), nullable=True)
     language: Mapped[str] = mapped_column(String(5), nullable=False, default="en", index=True)
     fetched_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    set_release_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
     prices: Mapped[list["CardPrice"]] = relationship("CardPrice", back_populates="card")

@@ -1,5 +1,5 @@
 """Pokemon TCG API (pokemontcg.io) fetcher."""
-from datetime import datetime
+from datetime import datetime, date
 from typing import Any
 
 from app.config import settings
@@ -52,6 +52,61 @@ def _card_to_dict(c: dict) -> dict:
         "image_small": images.get("small"),
         "image_large": images.get("large"),
     }
+
+
+async def fetch_card_prices(card_id: str) -> dict[str, float]:
+    """Fetch TCGPlayer prices for a single card via pokemontcg.io.
+    Returns {price_type: price_usd} e.g. {"market": 2.50, "near_mint": 1.00}.
+    """
+    data = await fetch_with_retry(f"{BASE}/cards/{card_id}", headers=_headers())
+    if not data:
+        return {}
+    tcg = data.get("data", {}).get("tcgplayer", {}).get("prices", {})
+    result: dict[str, float] = {}
+    # Prefer holofoil > 1stEditionHolofoil > reverseHolofoil > normal
+    for variant in ("holofoil", "1stEditionHolofoil", "reverseHolofoil", "normal"):
+        v = tcg.get(variant, {})
+        if v.get("market") and "market" not in result:
+            result["market"] = float(v["market"])
+        if v.get("low") and "near_mint" not in result:
+            result["near_mint"] = float(v["low"])
+        if result.get("market") and result.get("near_mint"):
+            break
+    return result
+
+
+async def fetch_sets() -> dict[str, date]:
+    """Fetch all Pokemon TCG sets and return {set_code: release_date}."""
+    data = await fetch_with_retry(f"{BASE}/sets", headers=_headers(), params={"pageSize": 500})
+    if not data:
+        return {}
+    result: dict[str, date] = {}
+    for s in data.get("data", []):
+        raw_date = s.get("releaseDate", "")  # format: "YYYY/MM/DD"
+        if raw_date and s.get("id"):
+            try:
+                parts = raw_date.replace("-", "/").split("/")
+                result[s["id"]] = date(int(parts[0]), int(parts[1]), int(parts[2]))
+            except Exception:
+                pass
+    return result
+
+
+async def populate_set_dates(db: Any) -> None:
+    """Populate set_release_date on all Pokemon cards using pokemontcg.io set data."""
+    from sqlalchemy import update
+    from app.models.card import Card
+
+    set_dates = await fetch_sets()
+    if not set_dates:
+        return
+    for set_code, release_date in set_dates.items():
+        await db.execute(
+            update(Card)
+            .where(Card.set_code == set_code, Card.language == "en")
+            .values(set_release_date=release_date)
+        )
+    await db.commit()
 
 
 async def upsert_card(db: Any, data: dict) -> None:
